@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -29,18 +28,18 @@ public class Base extends OpMode {
 
     @Override
     public void init() {
-        leftBackDriveMotor = hardwareMap.get(DcMotor.class, "leftBackDriveMotor");
-        rightBackDriveMotor = hardwareMap.get(DcMotor.class, "rightBackDriveMotor");
-        leftFrontDriveMotor = hardwareMap.get(DcMotor.class, "leftFrontDriveMotor");
-        rightFrontDriveMotor = hardwareMap.get(DcMotor.class, "rightFrontDriveMotor");
-        climbMotor = hardwareMap.get(DcMotor.class, "climbMotor");
+        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
+        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
+        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+        //climbMotor = hardwareMap.get(DcMotor.class, "climbMotor");
 
-        flipMotor = hardwareMap.get(DcMotor.class, "flipMotor");
-        liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
-        bucketMotor = hardwareMap.get(DcMotor.class, "bucketMotor");
+       // flipMotor = hardwareMap.get(DcMotor.class, "flipMotor");
+        //liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
+        //bucketMotor = hardwareMap.get(DcMotor.class, "bucketMotor");
 
-        marker_servo = hardwareMap.get(Servo.class, "marker_servo");
-        intake_servo = hardwareMap.get(Servo.class, "intake_servo");
+        //marker_servo = hardwareMap.get(Servo.class, "marker_servo");
+        //intake_servo = hardwareMap.get(Servo.class, "intake_servo");
 
         set_marker_servo(ConstantVariables.K_MARKER_SERVO_UP);
         set_intake_servo(ConstantVariables.K_INTAKE_SERVO_IN);
@@ -50,64 +49,64 @@ public class Base extends OpMode {
     public void start() {
         timer.reset();
         reset_drive_encoders();
-        reset_climb_encoders();
-        reset_intake_outtake_encoders();
+        //reset_climb_encoders();
+        //reset_intake_outtake_encoders();
     }
-
+/*
     @Override
     public void loop() {
         telemetry.addData("Timer: ", timer.seconds());
 
-        telemetry.addData("leftBack encoder: ", get_leftBack_motor_enc());
-        telemetry.addData("rightBack encoder: ", get_rightBack_motor_enc());
-        telemetry.addData("leftFront encoder: ", get_leftFront_motor_enc());
-        telemetry.addData("rightFront encoder: ", get_rightFront_motor_enc());
+        telemetry.addData("leftBack encoder: ", get_leftBack_enc());
+        telemetry.addData("rightBack encoder: ", get_rightBack_enc());
+        telemetry.addData("leftFront encoder: ", get_leftFront_enc());
+        telemetry.addData("rightFront encoder: ", get_rightFront_enc());
 
         //reset encoders
     }
 
-    public void climb(double power) {
-        double speed = Range.clip(power, -1, 1);
-        climbMotor.setPower(speed);
-    }
+    //public void climb(double power) {
+        //double speed = Range.clip(power, -1, 1);
+        //climbMotor.setPower(speed);
+   // }
 
-    public void flip(double power) {
-        double speed = Range.clip(power, -1, 1);
-        flipMotor.setPower(speed);
-    }
+    //public void flip(double power) {
+        //double speed = Range.clip(power, -1, 1);
+        //flipMotor.setPower(speed);
+    //}
 
-    public void lift(double power) {
-        double speed = Range.clip(power, -1, 1);
-        liftMotor.setPower(speed);
-    }
+    //public void lift(double power) {
+        //double speed = Range.clip(power, -1, 1);
+        //liftMotor.setPower(speed);
+    //}
 
-    public void bucket(double power) {
-        double speed = Range.clip(power, -1, 1);
-        bucketMotor.setPower(speed);
-    }
-
+    //public void bucket(double power) {
+        //double speed = Range.clip(power, -1, 1);
+        //bucketMotor.setPower(speed);
+    //}
+*/
     public boolean auto_drive(double power, double inches) {
         double TARGET_ENC = ConstantVariables.K_PPIN_DRIVE * inches;
         telemetry.addData("Target_enc: ", TARGET_ENC);
         double left_speed = -power;
         double right_speed = power;
-        /*double error = -get_left_front_drive_motor_enc() - get_right_front_drive_motor_enc();
+        double error = -get_leftFront_enc() - get_rightFront_enc();
         error /= ConstantVariables.K_DRIVE_ERROR_P;
         left_speed += error;
-        right_speed -= error;*/
+        right_speed -= error;
 
         left_speed = Range.clip(left_speed, -1, 1);
         right_speed = Range.clip(right_speed, -1, 1);
-        leftFrontDriveMotor.setPower(left_speed);
-        leftBackDriveMotor.setPower(left_speed);
-        rightFrontDriveMotor.setPower(right_speed);
-        rightBackDriveMotor.setPower(right_speed);
+        leftFront.setPower(leftBack_speed);
+        leftBack.setPower(leftFront_speed);
+        rightFront.setPower(rightBack_speed);
+        rightBack.setPower(rightFront_speed);
 
-        if (Math.abs(get_right_front_drive_motor_enc()) >= TARGET_ENC) {
-            leftFrontDriveMotor.setPower(0);
-            leftBackDriveMotor.setPower(0);
-            rightFrontDriveMotor.setPower(0);
-            rightBackDriveMotor.setPower(0);
+        if (Math.abs(get_rightFront_enc()) >= TARGET_ENC) {
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
             return true;
         }
         return false;
@@ -123,16 +122,16 @@ public class Base extends OpMode {
         telemetry.addData("D99 TURNING TO ENC: ", TARGET_ENC);
 
         double speed = Range.clip(power, -1, 1);
-        leftFrontDriveMotor.setPower(-speed);
-        leftBackDriveMotor.setPower(-speed);
-        rightFrontDriveMotor.setPower(-speed);
-        rightBackDriveMotor.setPower(-speed);
+        leftFront.setPower(-speed);
+        leftBack.setPower(-speed);
+        rightFront.setPower(-speed);
+        rightBack.setPower(-speed);
 
-        if (Math.abs(get_right_front_drive_motor_enc()) >= TARGET_ENC) {
-            leftFrontDriveMotor.setPower(0);
-            leftBackDriveMotor.setPower(0);
-            rightFrontDriveMotor.setPower(0);
-            rightBackDriveMotor.setPower(0);
+        if (Math.abs(get_rightFront_enc()) >= TARGET_ENC) {
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
             return true;
         } else {
             return false;
@@ -149,16 +148,16 @@ public class Base extends OpMode {
         double rightFrontPower = Range.clip(0 - power, -1.0, 1.0);
         double rightBackPower = Range.clip(0 + power, -1.0, 1.0);
 
-        leftFrontDriveMotor.setPower(leftFrontPower);
-        leftBackDriveMotor.setPower(leftBackPower);
-        rightFrontDriveMotor.setPower(rightFrontPower);
-        rightBackDriveMotor.setPower(rightBackPower);
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
 
-        if (Math.abs(get_right_front_drive_motor_enc()) >= TARGET_ENC) {
-            leftFrontDriveMotor.setPower(0);
-            leftBackDriveMotor.setPower(0);
-            rightFrontDriveMotor.setPower(0);
-            rightBackDriveMotor.setPower(0);
+        if (Math.abs(get_rightFront_enc()) >= TARGET_ENC) {
+            leftFront.setPower(0);
+            leftBack.setPower(0);
+            rightFront.setPower(0);
+            rightBack.setPower(0);
             return true;
         } else {
             return false;
@@ -173,10 +172,10 @@ public class Base extends OpMode {
         double rightFrontPower = Range.clip(rightPwr - lateralpwr, -1.0, 1.0);
         double rightBackPower = Range.clip(rightPwr + lateralpwr, -1.0, 1.0);
 
-        leftFrontDriveMotor.setPower(leftFrontPower);
-        leftBackDriveMotor.setPower(leftBackPower);
-        rightFrontDriveMotor.setPower(rightFrontPower);
-        rightBackDriveMotor.setPower(rightBackPower);
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
     }
 
     public void set_marker_servo(double pos) {
