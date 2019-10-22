@@ -14,7 +14,7 @@ public class BaseRobot extends OpMode {
     public Servo left, right;
 
 
-    public Enc leftBack_enc, rightBack_enc, leftFront_enc, rightFront_enc;
+    //public Enc leftBack_enc, rightBack_enc, leftFront_enc, rightFront_enc;
 
     public ElapsedTime timer = new ElapsedTime();
 
@@ -87,7 +87,7 @@ public class BaseRobot extends OpMode {
         //double speed = Range.clip(power, -1, 1);
         //bucketMotor.setPower(speed);
     //}
-*/
+
     public boolean auto_drive(double power, double inches) {
         double TARGET_ENC = ConstantVariables.K_PPIN_DRIVE * inches;
         telemetry.addData("Target_enc: ", TARGET_ENC);
