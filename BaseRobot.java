@@ -181,15 +181,15 @@ public class BaseRobot extends OpMode {
         rightBack.setPower(rightBackPower);
     }
 
-    public void set_marker_servo(double pos) {
-        double position = Range.clip(pos, 0, 1.0);
-        marker_servo.setPosition(position);
-    }
+    //public void set_marker_servo(double pos) {
+        //double position = Range.clip(pos, 0, 1.0);
+        //marker_servo.setPosition(position);
+    //}
 
-    public void set_intake_servo(double pos) {
-        double position = Range.clip(pos, 0, 1.0);
-        intake_servo.setPosition(position);
-    }
+    //public void set_intake_servo(double pos) {
+        //double position = Range.clip(pos, 0, 1.0);
+        //intake_servo.setPosition(position);
+    //}
 
     public void reset_drive_encoders() {
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
