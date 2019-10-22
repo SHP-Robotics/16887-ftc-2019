@@ -9,9 +9,12 @@ import com.qualcomm.robotcore.util.Range;
 
 //created by jonathon for 13981
 
-public class Base extends OpMode {
+public class BaseRobot extends OpMode {
     public DcMotor leftBack, rightBack, leftFront, rightFront, lower, upper;
     public Servo left, right;
+
+
+    public Enc leftBack_enc, rightBack_enc, leftFront_enc, rightFront_enc;
 
     public ElapsedTime timer = new ElapsedTime();
 
@@ -41,8 +44,8 @@ public class Base extends OpMode {
         //marker_servo = hardwareMap.get(Servo.class, "marker_servo");
         //intake_servo = hardwareMap.get(Servo.class, "intake_servo");
 
-        set_marker_servo(ConstantVariables.K_MARKER_SERVO_UP);
-        set_intake_servo(ConstantVariables.K_INTAKE_SERVO_IN);
+        //set_marker_servo(ConstantVariables.K_MARKER_SERVO_UP);
+        //set_intake_servo(ConstantVariables.K_INTAKE_SERVO_IN);
     }
 
     @Override
@@ -52,7 +55,7 @@ public class Base extends OpMode {
         //reset_climb_encoders();
         //reset_intake_outtake_encoders();
     }
-/*
+
     @Override
     public void loop() {
         telemetry.addData("Timer: ", timer.seconds());
@@ -62,7 +65,7 @@ public class Base extends OpMode {
         telemetry.addData("leftFront encoder: ", get_leftFront_enc());
         telemetry.addData("rightFront encoder: ", get_rightFront_enc());
 
-        //reset encoders
+        reset encoders;
     }
 
     //public void climb(double power) {
