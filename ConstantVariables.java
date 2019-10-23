@@ -5,11 +5,11 @@ package org.firstinspires.ftc.teamcode;
  */
 
 public class ConstantVariables {
-    public static final double K_MARKER_SERVO_UP = 0.72;
-    public static final double K_MARKER_SERVO_DOWN = 0.05;
+    public static final double K_LEFT_SERVO_UP = 0.72;
+    public static final double K_LEFT_SERVO_DOWN = 0.05;
 
-    //public static final double K_INTAKE_SERVO_OUT = 0;
-    //public static final double K_INTAKE_SERVO_IN = 0.65;
+    public static final double K_RIGHT_SERVO_UP = 0;
+    public static final double K_RIGHT_SERVO_DOWN = 0.65;
 
     public static final int K_PPR_DRIVE = 1120;
     public static final double K_DRIVE_WHEEL_DIA = 4;
