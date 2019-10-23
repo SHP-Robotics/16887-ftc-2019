@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-//created by jonathon for 13981
+//created by for 16887
 
 public class BaseRobot extends OpMode {
     public DcMotor leftBack, rightBack, leftFront, rightFront, lower, upper;
@@ -60,12 +60,12 @@ public class BaseRobot extends OpMode {
     public void loop() {
         telemetry.addData("Timer: ", timer.seconds());
 
-        telemetry.addData("leftBack encoder: ", get_leftBack_enc());
-        telemetry.addData("rightBack encoder: ", get_rightBack_enc());
-        telemetry.addData("leftFront encoder: ", get_leftFront_enc());
-        telemetry.addData("rightFront encoder: ", get_rightFront_enc());
+        telemetry.addData("leftBack encoder: ", get_leftBack_motor_enc());
+        telemetry.addData("rightBack encoder: ", get_rightBack_motor_enc());
+        telemetry.addData("leftFront encoder: ", get_leftFront_motor_enc());
+        telemetry.addData("rightFront encoder: ", get_rightFront_motor_enc());
 
-        reset encoders;
+//        reset encoders;
     }
 
     //public void climb(double power) {
@@ -93,19 +93,19 @@ public class BaseRobot extends OpMode {
         telemetry.addData("Target_enc: ", TARGET_ENC);
         double left_speed = -power;
         double right_speed = power;
-        double error = -get_leftFront_enc() - get_rightFront_enc();
+        double error = -get_leftFront_motor_enc() - get_rightFront_motor_enc();
         error /= ConstantVariables.K_DRIVE_ERROR_P;
         left_speed += error;
         right_speed -= error;
 
         left_speed = Range.clip(left_speed, -1, 1);
         right_speed = Range.clip(right_speed, -1, 1);
-        leftFront.setPower(leftBack_speed);
-        leftBack.setPower(leftFront_speed);
-        rightFront.setPower(rightBack_speed);
-        rightBack.setPower(rightFront_speed);
+        leftFront.setPower(left_speed);
+        leftBack.setPower(left_speed);
+        rightFront.setPower(right_speed);
+        rightBack.setPower(right_speed);
 
-        if (Math.abs(get_rightFront_enc()) >= TARGET_ENC) {
+        if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
             leftBack.setPower(0);
             rightFront.setPower(0);
@@ -130,7 +130,7 @@ public class BaseRobot extends OpMode {
         rightFront.setPower(-speed);
         rightBack.setPower(-speed);
 
-        if (Math.abs(get_rightFront_enc()) >= TARGET_ENC) {
+        if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
             leftBack.setPower(0);
             rightFront.setPower(0);
@@ -156,7 +156,7 @@ public class BaseRobot extends OpMode {
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-        if (Math.abs(get_rightFront_enc()) >= TARGET_ENC) {
+        if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
             leftBack.setPower(0);
             rightFront.setPower(0);
