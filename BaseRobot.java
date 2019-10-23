@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.util.Range;
 
 public class BaseRobot extends OpMode {
     public DcMotor leftBack, rightBack, leftFront, rightFront, lower, upper;
-    public Servo left, right;
+    public Servo left_servo, right_servo;
 
 
     //public Enc leftBack_enc, rightBack_enc, leftFront_enc, rightFront_enc;
@@ -35,17 +35,17 @@ public class BaseRobot extends OpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        //climbMotor = hardwareMap.get(DcMotor.class, "climbMotor");
 
+        // climbMotor = hardwareMap.get(DcMotor.class, "climbMotor");
        // flipMotor = hardwareMap.get(DcMotor.class, "flipMotor");
-        //liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
-        //bucketMotor = hardwareMap.get(DcMotor.class, "bucketMotor");
+        // liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
+        // bucketMotor = hardwareMap.get(DcMotor.class, "bucketMotor");
 
-        //marker_servo = hardwareMap.get(Servo.class, "marker_servo");
-        //intake_servo = hardwareMap.get(Servo.class, "intake_servo");
-
-        //set_marker_servo(ConstantVariables.K_MARKER_SERVO_UP);
-        //set_intake_servo(ConstantVariables.K_INTAKE_SERVO_IN);
+         left_servo = hardwareMap.get(Servo.class, "marker_servo");
+         right_servo = hardwareMap.get(Servo.class, "intake_servo");
+// I don't know: UP -> UP, IN -> UP
+         set_left_servo(ConstantVariables.K_LEFT_SERVO_UP);
+         set_right_servo(ConstantVariables.K_RIGHT_SERVO_UP);
     }
 
     @Override
@@ -181,15 +181,15 @@ public class BaseRobot extends OpMode {
         rightBack.setPower(rightBackPower);
     }
 
-    //public void set_marker_servo(double pos) {
-        //double position = Range.clip(pos, 0, 1.0);
-        //marker_servo.setPosition(position);
-    //}
+    public void set_left_servo(double pos) {
+        double position = Range.clip(pos, 0, 1.0);
+        left_servo.setPosition(position);
+    }
 
-    //public void set_intake_servo(double pos) {
-        //double position = Range.clip(pos, 0, 1.0);
-        //intake_servo.setPosition(position);
-    //}
+    public void set_right_servo(double pos) {
+        double position = Range.clip(pos, 0, 1.0);
+        right_servo.setPosition(position);
+    }
 
     public void reset_drive_encoders() {
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
