@@ -23,8 +23,8 @@ public class MainTeleOp extends BaseRobot {
     @Override
     public void loop() {
         super.loop();
-        //keep marker_servo up
-        set_marker_servo(ConstantVariables.K_MARKER_SERVO_UP);
+        // keep marker_servo up
+// set_marker_servo(ConstantVariables.K_MARKER_SERVO_UP);
 
         //drive train
         tankanum_drive(gamepad1.right_stick_y, gamepad1.left_stick_y, gamepad1.right_stick_x);
