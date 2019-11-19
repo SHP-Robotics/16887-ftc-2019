@@ -5,20 +5,27 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
-//created by for 16887
-public class BaseRobot extends OpMode {
-    public DcMotor leftBack, rightBack, leftFront, rightFront, lift, lift2;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+
+// created by for 16887
+// BaseRobotEx uses DcMotorEx to control the motors.  Velocity is used instead of Power
+// Velocity is measured in ticks per second
+// void setVelocity(double angularRate) - angularRate: the desired ticks per second
+// double getVelocity() - Returns the current velocity of the motor, in ticks per second
+
+public class BaseRobotEx extends OpMode {
+    public DcMotorEx leftBack, rightBack, leftFront, rightFront, lift;
     public Servo back_servo, front_servo;
     public ElapsedTime timer = new ElapsedTime();
     public boolean DEBUG=false;                     // Debug flag
 
     @Override
     public void init() {
-        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBack   = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBack  = hardwareMap.get(DcMotor.class, "rightBack");
-        lift       = hardwareMap.get(DcMotor.class, "lift");
+        leftBack   = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightBack  = hardwareMap.get(DcMotorEx.class, "rightBack");
+        leftFront  = hardwareMap.get(DcMotorEx.class, "leftFront");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        lift       = hardwareMap.get(DcMotorEx.class, "lift");
         front_servo = hardwareMap.get(Servo.class, "front_servo");
         back_servo  = hardwareMap.get(Servo.class, "back_servo");
         // ZeroPowerBehavior of the motors
@@ -59,23 +66,29 @@ public class BaseRobot extends OpMode {
      * @param inches:  move "inches" inches.  "inches" is positive
      * @return Whether the target "inches" has been reached.
      */
-    public boolean auto_drive(double power, double inches) {
+    public boolean auto_drive(double velocity, double inches) {
         double TARGET_ENC = ConstantVariables.K_PPIN_DRIVE * inches;
-        double left_speed = -power;
-        double right_speed = power;
+        double left_speed = -velocity;
+        double right_speed = velocity;
         double error = -get_leftFront_motor_enc() - get_rightFront_motor_enc();
         error /= ConstantVariables.K_DRIVE_ERROR_P;
         left_speed += error;
         right_speed -= error;
+// Angular Velocity Adjustment
+        left_speed = left_speed * ConstantVariables.K_Ang_Rate_ADJUST;
+        right_speed = right_speed * ConstantVariables.K_Ang_Rate_ADJUST;
+        leftFront.setVelocity(left_speed);
+        leftBack.setVelocity(left_speed);
+        rightFront.setVelocity(right_speed);
+        rightBack.setVelocity(right_speed);
 
-        left_speed = Range.clip(left_speed, -1, 1);
-        right_speed = Range.clip(right_speed, -1, 1);
-        leftFront.setPower(left_speed);
-        leftBack.setPower(left_speed);
-        rightFront.setPower(right_speed);
-        rightBack.setPower(right_speed);
-
-        if (DEBUG) telemetry.addData("Auto_D - Target_enc: ", TARGET_ENC);
+        if (DEBUG) {
+            double left_speed_REV_PER_S = left_speed / ConstantVariables.K_PPR_DRIVE;
+            double right_speed_REV_PER_S = right_speed / ConstantVariables.K_PPR_DRIVE;
+            telemetry.addData("Auto_D - Target_enc: ", TARGET_ENC);
+            telemetry.addData("AUTO_D- Velocity:", "Left=%0.2f t/s, Right=%0.2f t/s", left_speed, right_speed);
+            telemetry.addData("AUTO_D- Velocity:", "Left=%0.2f r/s, Right=%0.2f r/s", left_speed_REV_PER_S, right_speed_REV_PER_S);
+        }
         if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
             leftBack.setPower(0);
@@ -85,19 +98,26 @@ public class BaseRobot extends OpMode {
         }
         return false;
     }
-    /* @param power:   the speed to turn at. Negative for left.
+    /*
+     * @param power:   the speed to turn at. Negative for left.
+     * @param velocity: the desired angular Rate, in units per second.  It is converted to ticks per second by K_Ang_Rate_Adjust
      * @param degrees: the number of degrees to turn.
      * @return Whether the target angle has been reached.
      */
-    public boolean auto_turn(double power, double degrees) {
+    public boolean auto_turn(double velocity, double degrees) {
         double TARGET_ENC = Math.abs(ConstantVariables.K_PPDEG_DRIVE * degrees);  // degrees to turns
-        double speed = Range.clip(power, -1, 1);
-        leftFront.setPower(-speed);
-        leftBack.setPower(-speed);
-        rightFront.setPower(-speed);
-        rightBack.setPower(-speed);
+        double speed = velocity * ConstantVariables.K_Ang_Rate_ADJUST;
+        leftFront.setVelocity(-speed);
+        leftBack.setVelocity(-speed);
+        rightFront.setVelocity(-speed);
+        rightBack.setVelocity(-speed);
 
-        if (DEBUG) telemetry.addData("AUTO_T TURNING TO ENC: ", TARGET_ENC);
+        if (DEBUG) {
+            double speed_REV_PER_S = speed / ConstantVariables.K_PPR_DRIVE;
+            telemetry.addData("AUTO_T- TURNING TO ENC: ", TARGET_ENC);
+            telemetry.addData("AUTO_T- Velocity:", "%0.2f tick/s", speed);
+            telemetry.addData("AUTO_T- Velocity:", "%0.2f tick/s", speed_REV_PER_S);
+        }
         if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
             leftBack.setPower(0);
@@ -108,21 +128,25 @@ public class BaseRobot extends OpMode {
             return false;
         }
     }
-    // Positive for right, negative for left
-    // Convert from inches to number of ticks per revolution
-    public boolean auto_mecanum(double power, double inches) {
+    //positive for right, negative for left
+    public boolean auto_mecanum(double velocity, double inches) {
         double TARGET_ENC = ConstantVariables.K_PPIN_DRIVE * inches;
-        double leftFrontPower = Range.clip(0 - power, -1.0, 1.0);
-        double leftBackPower = Range.clip(0 + power, -1.0, 1.0);
-        double rightFrontPower = Range.clip(0 - power, -1.0, 1.0);
-        double rightBackPower = Range.clip(0 + power, -1.0, 1.0);
 
-        if (DEBUG) telemetry.addData("MEC - Target_enc: ", TARGET_ENC);
-        leftFront.setPower(leftFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightFront.setPower(rightFrontPower);
-        rightBack.setPower(rightBackPower);
+        double leftFrontVelo = Range.clip(0 - velocity, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        double leftBackVelo = Range.clip(0 + velocity, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        double rightFrontVelo = Range.clip(0 - velocity, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        double rightBackVelo = Range.clip(0 + velocity, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
 
+        leftFront.setVelocity(leftFrontVelo);
+        leftBack.setVelocity(leftBackVelo);
+        rightFront.setVelocity(rightFrontVelo);
+        rightBack.setVelocity(rightBackVelo);
+
+        if (DEBUG) {
+            telemetry.addData("Mec- Target_enc: ", TARGET_ENC);
+            telemetry.addData("Mec- Front Vel:", "Left=%0.2f, Right=%0.2f", leftFront.getVelocity(), rightFront.getVelocity());
+            telemetry.addData("Mec- Back Vel: ", "Left=%0.2f, Right=%0.2f", leftBack.getVelocity(), rightBack.getVelocity());
+        }
         if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
             leftBack.setPower(0);
@@ -133,45 +157,45 @@ public class BaseRobot extends OpMode {
             return false;
         }
     }
-    // When strafing, rightPwr and leftPwr is assumed to be zero
-    // With the change, there is no diagonal movement
-    public void tankanum_drive(double rightPwr, double leftPwr, double lateralpwr) {
-        rightPwr *= -1;    // rightPwr is in reverse
-        double leftFrontPower, leftBackPower, rightFrontPower, rightBackPower;
-        // When lateralpwr is very small, the robot purely forward or backward
-        if (lateralpwr > -0.05 && lateralpwr < 0.05) {                  // Purely forward or backward
-            leftFrontPower = Range.clip(leftPwr, -1.0, 1.0);
-            leftBackPower = Range.clip(leftPwr, -1.0, 1.0);
-            rightFrontPower = Range.clip(rightPwr, -1.0, 1.0);
-            rightBackPower = Range.clip(rightPwr, -1.0, 1.0);
-        } else {                                                        // Strafe
-            leftFrontPower = Range.clip(-lateralpwr, -1.0, 1.0);
-            leftBackPower = Range.clip(lateralpwr, -1.0, 1.0);
-            rightFrontPower = Range.clip(-lateralpwr, -1.0, 1.0);
-            rightBackPower = Range.clip(lateralpwr, -1.0, 1.0);
+    // When moving sideway, rightVelo and leftVelo is assumed to be zero
+    public void tankanum_drive(double rightVelo, double leftVelo, double lateralVelo) {
+        rightVelo *= -1;    // rightPwr is in reverse
+        double leftFrontVelo = Range.clip(leftVelo - lateralVelo, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        double leftBackVelo = Range.clip(leftVelo + lateralVelo, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        double rightFrontVelo = Range.clip(rightVelo - lateralVelo, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        double rightBackVelo = Range.clip(rightVelo + lateralVelo, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        // When lateralpwr is very small, the robot move purely forward or backward
+//        if (lateralpwr > -0.05 && lateralpwr < 0.05) {                  // purely forward or backward
+ //           leftFrontPower = Range.clip(leftPwr, -1.0, 1.0);
+//            leftBackPower = Range.clip(leftPwr, -1.0, 1.0);
+//            rightFrontPower = Range.clip(rightPwr, -1.0, 1.0);
+//            rightBackPower = Range.clip(rightPwr, -1.0, 1.0);
+//        } else {                                                        // Strafing
+//            leftFrontPower = Range.clip(-lateralpwr, -1.0, 1.0);
+//            leftBackPower = Range.clip(lateralpwr, -1.0, 1.0);
+//            rightFrontPower = Range.clip(-lateralpwr, -1.0, 1.0);
+//            rightBackPower = Range.clip(lateralpwr, -1.0, 1.0);
+//        }
+
+        leftFront.setVelocity(leftFrontVelo);
+        leftBack.setVelocity(leftBackVelo);
+        rightFront.setVelocity(rightFrontVelo);
+        rightBack.setVelocity(rightBackVelo);
+
+        if (DEBUG) {
+            telemetry.addData("TAN Front:", " Left=%.2ft/s, Right%.2ft/s", leftFront.getVelocity(), rightFront.getVelocity());
+            telemetry.addData("TAN Back :", " Left=%.2ft/s, Right%.2ft/s", leftBack.getVelocity(),  rightBack.getVelocity());
         }
-// to adjust the power among the motors so that they have almost equal ACTUAL PHYSICAL powers
-leftFrontPower = Range.clip(leftFrontPower * ConstantVariables.K_LF_ADJUST, -1.0, 1.0);
-leftBackPower = Range.clip(leftBackPower * ConstantVariables.K_LF_ADJUST, -1.0, 1.0);
-rightFrontPower = Range.clip(rightFrontPower * ConstantVariables.K_LF_ADJUST, -1.0, 1.0);
-rightBackPower = Range.clip(rightBackPower * ConstantVariables.K_LF_ADJUST, -1.0, 1.0);
-
-        if (DEBUG) telemetry.addData("TAN- Lateral: ", lateralpwr);
-        leftFront.setPower(leftFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightFront.setPower(rightFrontPower);
-        rightBack.setPower(rightBackPower);
     }
-    public void tank_drive(double leftPwr, double rightPwr) {
-        rightPwr *= -1;    // rightPwr is in reverse
-        double leftPower = Range.clip(leftPwr, -1.0, 1.0);
-        double rightPower = Range.clip(rightPwr, -1.0, 1.0);
+    public void tank_drive(double leftVelo, double rightVelo) {
+        rightVelo *= -1;    // rightPwr is in reverse
+        double leftVelocity = Range.clip(leftVelo, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
+        double rightVelocity = Range.clip(rightVelo, -1.0, 1.0) * ConstantVariables.K_Ang_Rate_ADJUST;
 
-        if (DEBUG) telemetry.addData("TAN- Power: ", "Left=%0.2f, Right=%0.2f", leftPower, rightPower);
-        leftFront.setPower(leftPower);
-        leftBack.setPower(leftPower);
-        rightFront.setPower(rightPower);   // right is opposite to left
-        rightBack.setPower(rightPower);    // right is opposite to left
+        leftFront.setVelocity(leftVelocity);
+        leftBack.setVelocity(leftVelocity);
+        rightFront.setVelocity(rightVelocity);   // right is opposite to left
+        rightBack.setVelocity(rightVelocity);    // right is opposite to left
     }
     // SERVOS functions: open, close and reset
     public boolean open_servos() {
@@ -220,17 +244,12 @@ rightBackPower = Range.clip(rightBackPower * ConstantVariables.K_LF_ADJUST, -1.0
         lift.setPower(ConstantVariables.K_LIFT_MAX_PWR);
         return(lift.getTargetPosition() == target_pos);
     }
-    public boolean set_lift2_target_pos(int target_pos) {
-        lift2.setTargetPosition(target_pos);
-        lift2.setPower(ConstantVariables.K_LIFT2_MAX_PWR);
-        return(lift2.getTargetPosition() == target_pos);
-    }
-    private boolean set_front_servo(double target_pos) {
+    public boolean set_front_servo(double target_pos) {
         double position = Range.clip(target_pos, 0, 1.0);
         front_servo.setPosition(position);
         return front_servo.getPosition() == position;
     }
-    private boolean set_back_servo(double target_pos) {
+    public boolean set_back_servo(double target_pos) {
         double position = Range.clip(target_pos, 0, 1.0);
         back_servo.setPosition(position);
         return back_servo.getPosition() == position;
@@ -246,7 +265,6 @@ rightBackPower = Range.clip(rightBackPower * ConstantVariables.K_LF_ADJUST, -1.0
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
     }
     public void reset_lift_encoder() {
         // The motor is to set the current encoder position to zero.
@@ -256,44 +274,36 @@ rightBackPower = Range.clip(rightBackPower * ConstantVariables.K_LF_ADJUST, -1.0
         // which has been provided through the setTargetPosition() method.
         lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
-    public void reset_lift2_encoder() {
-        // The motor is to set the current encoder position to zero.
-        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        // The motor is to attempt to rotate in whatever direction is necessary to cause
-        // the encoder reading to advance or retreat from its current setting to the setting
-        // which has been provided through the setTargetPosition() method.
-        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
     //get leftBack encoders
     public int get_leftBack_motor_enc() {
-        if (leftBack.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        if (leftBack.getMode() != DcMotorEx.RunMode.RUN_USING_ENCODER) {
+            leftBack.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         }
         return leftBack.getCurrentPosition();
     }
     //get leftFront encoders
     public int get_leftFront_motor_enc() {
-        if (leftFront.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        if (leftFront.getMode() != DcMotorEx.RunMode.RUN_USING_ENCODER) {
+            leftFront.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         }
         return leftFront.getCurrentPosition();
     }
     //get rightBack encoders
     public int get_rightBack_motor_enc() {
-        if (rightBack.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        if (rightBack.getMode() != DcMotorEx.RunMode.RUN_USING_ENCODER) {
+            rightBack.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         }
         return rightBack.getCurrentPosition();
     }
     //get rightFront encoders
     public int get_rightFront_motor_enc() {
-        if (rightFront.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        if (rightFront.getMode() != DcMotorEx.RunMode.RUN_USING_ENCODER) {
+            rightFront.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         }
         return rightFront.getCurrentPosition();
     }
     // get lift encoder
-    public int get_lift_motor_enc() {      // RUN_TO_POSITION is more accurate
+    public int get_lift_motor_enc() {
         if (lift.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
             lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }

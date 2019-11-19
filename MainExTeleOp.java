@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 // Created for 16887.
-@TeleOp(name="Main TeleOp", group="TeleOp")
+@TeleOp(name="MainEx TeleOp", group="_ExTeleOp")
 //@Disabled
-public class MainTeleOp extends BaseRobot {
+public class MainExTeleOp extends BaseRobotEx {
     @Override
     public void init() { super.init(); }
     @Override
@@ -14,20 +14,11 @@ public class MainTeleOp extends BaseRobot {
 
         // lift motor
         if (gamepad1.left_bumper)
-            lift.setPower(-1);
+            set_lift_target_pos((int)(-ConstantVariables.K_LIFT_ONE_REV  * ConstantVariables.K_LIFT_NUM_REV));
         else if (gamepad1.right_bumper)
-            lift.setPower(1);
+            set_lift_target_pos((int)(ConstantVariables.K_LIFT_ONE_REV  * ConstantVariables.K_LIFT_NUM_REV));
         else
             lift.setPower(0);
-
-      /*  // lift2 motor
-        if (gamepad1.left_trigger>0.1)
-            lift2.setPower(-gamepad1.left_trigger);
-        else if (gamepad1.right_trigger>0.1)
-            lift2.setPower(gamepad1.left_trigger);
-        else
-            lift2.setPower(0);
-*/
         //open servo (UP)
         if (gamepad1.a) open_servos(); //find double through trial and error; set in constant variables
         //close servo (DOWN)
