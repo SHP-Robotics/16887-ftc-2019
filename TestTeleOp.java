@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 // Created for 16887.
-@TeleOp(name="Test TeleOp", group="TeleOp")
+@TeleOp(name="Test TeleOp", group="_Other")
 //@Disabled
 public class TestTeleOp extends BaseRobot {
     @Override
@@ -12,6 +12,7 @@ public class TestTeleOp extends BaseRobot {
     @Override
     public void start() {
         super.start();
+        DEBUG = true;
     }
     @Override
     public void loop() {
@@ -33,8 +34,25 @@ public class TestTeleOp extends BaseRobot {
             else leftFront.setPower(0);
             if (gamepad1.b) rightFront.setPower(1);
             else rightFront.setPower(0);
-
         }
+        // lift motor
+        if (gamepad1.left_bumper)
+            set_lift1_target_pos((int)(-ConstantVariables.K_LIFT_ONE_REV  * ConstantVariables.K_LIFT_NUM_REV_PER_STEP));
+        else if (gamepad1.right_bumper)
+            set_lift1_target_pos((int)(ConstantVariables.K_LIFT_ONE_REV  * ConstantVariables.K_LIFT_NUM_REV_PER_STEP));
+        else
+            lift1.setPower(0);
+        /*if (gamepad1.left_bumper)
+            lift1.setPower(-1.0);
+        else if (gamepad1.right_bumper)
+            lift1.setPower(1.0);
+        else
+            lift1.setPower(0.0);
+*/
+        //open servo (UP)
+        if (gamepad1.a) open_servos(); //find double through trial and error; set in constant variables
+        //close servo (DOWN)
+        if (gamepad1.b)  close_servos(); //find double through trial and error; set in constant variables
         if (gamepad1.left_stick_button) DEBUG = !DEBUG; // Toggle the debug flag
         super.loop();
     }

@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 // Created for 16887
 public class ConstantVariables {
-    public static final int    K_PPR_DRIVE = 1120;    // Number of ticks per revolution (AndyMark)
-    public static final double K_DRIVE_WHEEL_DIA = 4; // Diameter of the mecanum wheel in inches?
-    public static final double K_DRIVE_DIA = 16.5;    // Diameter?
+    public static final int    K_PPR_DRIVE = 1120;      // Number of ticks per revolution (AndyMark)
+    public static final double K_DRIVE_WHEEL_DIA = 4.0; // Diameter of the mecanum wheel in inches
+    public static final double K_DRIVE_DIA = 16.5;      // Diameter?
 
-    public static final double K_DRIVE_WHEEL_CIRCUMFERENCE = K_DRIVE_WHEEL_DIA * Math.PI; //12.56637inch
-    public static final double K_PPIN_DRIVE = K_PPR_DRIVE / K_DRIVE_WHEEL_CIRCUMFERENCE; //89.1267725inch
+    public static final double K_DRIVE_WHEEL_CIRCUMFERENCE = K_DRIVE_WHEEL_DIA * Math.PI;// 12.6 inch
+    public static final double K_PPIN_DRIVE = K_PPR_DRIVE / K_DRIVE_WHEEL_CIRCUMFERENCE; // 89.1 ticks/inch
 
     public static final double K_TURN_CIRCUMFERENCE = K_DRIVE_DIA * Math.PI;  // Circumference
     public static final double K_PPTURN_DRIVE = K_PPIN_DRIVE * K_TURN_CIRCUMFERENCE;
@@ -14,21 +14,21 @@ public class ConstantVariables {
 
     public static final double K_DRIVE_ERROR_P = 250; // higher = less sensitive
 
-    public static final int    K_LIFT_ONE_REV = K_PPR_DRIVE;  // one rev in encode ticks
-    public static final int  K_LIFT_INIT_DROP_FOUND = (int) (K_LIFT_ONE_REV * 2.0); // Initial drop in foundation, in ticks
+    public static final int    K_LIFT_ONE_REV = 270;  // one rev in encode ticks?
+    public static final int  K_LIFT_INIT_DROP_FOUND = (int) (K_LIFT_ONE_REV * 1.0);  // Initial drop in foundation, in ticks
     public static final int    K_LIFT_INIT_DROP_SKY = (int) (K_LIFT_ONE_REV * 1.0); // Initial drop in skytstone, in ticks
-    public static final double K_LIFT_NUM_REV_PER_STEP = 1.5; // Number of revolution for each step
+    public static final double K_LIFT_NUM_REV_PER_STEP = 3.0; // Number of revolution for each step
     public static final double K_LIFT_MAX_PWR = 1.0; // Maximum power (speed) to target position
 
     //public static final int    K_LIFT2_ONE_REV = K_PPR_DRIVE;  // one rev in encode ticks
     //public static final double K_LIFT2_NUM_REV = 1.5; // Number of revolution for each step
     //public static final double K_LIFT2_MAX_PWR = 1.0; // Maximum power (speed) to target position
 
-    public static final double K_LEFT_SERVO_OPEN = 0.8;     // STEP
-    public static final double K_LEFT_SERVO_CLOSE = 0.6;
+    public static final double K_LEFT_SERVO_OPEN = 0.65;     // STEP
+    public static final double K_LEFT_SERVO_CLOSE = 0.85;
 
-    public static final double K_RIGHT_SERVO_OPEN = 0.63;     // STEP
-    public static final double K_RIGHT_SERVO_CLOSE = 0.43;   // Back is set to run in REVERSE?
+    public static final double K_RIGHT_SERVO_OPEN = 0.40;     // STEP
+    public static final double K_RIGHT_SERVO_CLOSE = 0.68;   // Back is set to run in REVERSE?
 
     // Since the four motors are not identical, an additional factor is used to adjust the speed
     // so that they will run equally.

@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import static com.qualcomm.robotcore.hardware.DistanceSensor.distanceOutOfRange;
+
 //created by for 16887
 public class BaseRobot extends OpMode {
     public DcMotor leftBack, rightBack, leftFront, rightFront, lift1; //lift2;
@@ -27,57 +29,53 @@ public class BaseRobot extends OpMode {
         leftBack   = hardwareMap.get(DcMotor.class, "leftBack");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack  = hardwareMap.get(DcMotor.class, "rightBack");
-        lift1       = hardwareMap.get(DcMotor.class, "lift1");
-        //lift2       = hardwareMap.get(DcMotor.class, "lift2");
-        left_servo = hardwareMap.get(Servo.class, "left_servo");
+        lift1      = hardwareMap.get(DcMotor.class, "lift1");
+        left_servo   = hardwareMap.get(Servo.class, "left_servo");
         right_servo  = hardwareMap.get(Servo.class, "right_servo");
         front_sensor = hardwareMap.get(ColorSensor.class, "front_sensor");
         distance_sensor = hardwareMap.get(DistanceSensor.class, "front_sensor");
 
         // ZeroPowerBehavior of the motors
-        telemetry.addData("Front ZeroP behavior:", "Left=%s, Right=%s", leftFront.getZeroPowerBehavior(), rightFront.getZeroPowerBehavior());
-        telemetry.addData("Back ZeroP behavior: ", "Left=%s, Right=%s", leftBack.getZeroPowerBehavior(), rightBack.getZeroPowerBehavior());
-        telemetry.addData("LIFT1 ZeroP behavior ", lift1.getZeroPowerBehavior());
-        telemetry.addData("Sen: ", "%d/ %d/ %d/ %d/ %d", front_sensor.alpha(), front_sensor.red(), front_sensor.green(), front_sensor.blue(), front_sensor.argb());
-        telemetry.addData("Distance (cm)", distance_sensor.getDistance(DistanceUnit.CM));
-        telemetry.addData("Servo dir: ", "LEFT=%s, RIGHT=%s", left_servo.getDirection(), right_servo.getDirection());
-        telemetry.addData("Servo pos: ", "LEFT=%.2f, RIGHT=%.2f", left_servo.getPosition(), right_servo.getPosition());
+        telemetry.addData("INI Front ZeroP behavior:", "Left=%s, Right=%s", leftFront.getZeroPowerBehavior(), rightFront.getZeroPowerBehavior());
+        telemetry.addData("INI Back ZeroP behavior: ", "Left=%s, Right=%s", leftBack.getZeroPowerBehavior(), rightBack.getZeroPowerBehavior());
+        telemetry.addData("INI LIFT1 position", lift1.getCurrentPosition());
+        telemetry.addData("INI Sen: ", "%d/ %d/ %d/ %d/ %d", front_sensor.alpha(), front_sensor.red(), front_sensor.green(), front_sensor.blue(), front_sensor.argb());
+        telemetry.addData("INI Distance (cm)", distance_sensor.getDistance(DistanceUnit.CM));
+        telemetry.addData("INI Servo dir: ", "LEFT=%s, RIGHT=%s", left_servo.getDirection(), right_servo.getDirection());
+        telemetry.addData("INI Servo pos: ", "LEFT=%.2f, RIGHT=%.2f", left_servo.getPosition(), right_servo.getPosition());
+
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        lift1.setDirection(DcMotorSimple.Direction.FORWARD);
-        lift1.setTargetPosition(0);
-        //lift2.setDirection(DcMotorSimple.Direction.FORWARD);
+        lift1.setDirection(DcMotorSimple.Direction.REVERSE);        // Because of the way the motor is mounted, this will avoid using negative numbers
+        // Positive is UP and negative in down.  It resets to zero at start().
 // Default direction is FORWARD. Front and Back rotates oppositely
-// left_servo.setDirection(Servo.Direction.REVERSE);
 //left_servo.resetDeviceConfigurationForOpMode();
 //right_servo.resetDeviceConfigurationForOpMode();
         left_servo.setDirection(Servo.Direction.REVERSE);
         right_servo.setDirection(Servo.Direction.FORWARD);
         left_servo_close  = ConstantVariables.K_LEFT_SERVO_CLOSE;
         right_servo_close = ConstantVariables.K_RIGHT_SERVO_CLOSE;
-        left_servo_open = ConstantVariables.K_LEFT_SERVO_OPEN;
+        left_servo_open  = ConstantVariables.K_LEFT_SERVO_OPEN;
         right_servo_open = ConstantVariables.K_RIGHT_SERVO_OPEN;
-
-        open_servos();
     }
     @Override
     public void start() {
         timer.reset();
-        reset_drive_encoders();
-        reset_lift1_encoder();
-        front_sensor.enableLed(true);
-        // ZeroPowerBehavior of the motors
-        telemetry.addData("Front ZeroP behavior:", "Left=%s, Right=%s", leftFront.getZeroPowerBehavior(), rightFront.getZeroPowerBehavior());
-        telemetry.addData("Back ZeroP behavior: ", "Left=%s, Right=%s", leftBack.getZeroPowerBehavior(), rightBack.getZeroPowerBehavior());
-        telemetry.addData("LIFT1 ZeroP behavior ", lift1.getZeroPowerBehavior());
-        telemetry.addData("Sen: ", "%d/ %d/ %d/ %d/ %d", front_sensor.alpha(), front_sensor.red(), front_sensor.green(), front_sensor.blue(), front_sensor.argb());
-        telemetry.addData("Distance (cm)", distance_sensor.getDistance(DistanceUnit.CM));
-        telemetry.addData("Servo dir: ", "LEFT=%s, RIGHT=%s", left_servo.getDirection(), right_servo.getDirection());
-        telemetry.addData("Servo pos: ", "LEFT=%.2f, RIGHT=%.2f", left_servo.getPosition(), right_servo.getPosition());
+        reset_drive_encoders();         // reset all four motors: set encoders to zero and set modes
+        reset_lift1_encoder();          // reset lift motor: set encoders to zero and set modes
+        open_servos();                  // open the left and right servos
+        front_sensor.enableLed(true);   // turn on the sensor LED
+        telemetry.addData("START Front ZeroP behavior:", "Left=%s, Right=%s", leftFront.getZeroPowerBehavior(), rightFront.getZeroPowerBehavior());
+        telemetry.addData("START Back ZeroP behavior: ", "Left=%s, Right=%s", leftBack.getZeroPowerBehavior(), rightBack.getZeroPowerBehavior());
+        telemetry.addData("START LIFT1 position", lift1.getCurrentPosition());
+        telemetry.addData("START Sen: ", "%d/ %d/ %d/ %d/ %d", front_sensor.alpha(), front_sensor.red(), front_sensor.green(), front_sensor.blue(), front_sensor.argb());
+        telemetry.addData("START Distance (cm)", distance_sensor.getDistance(DistanceUnit.CM));
+        telemetry.addData("START Servo dir: ", "LEFT=%s, RIGHT=%s", left_servo.getDirection(), right_servo.getDirection());
+        telemetry.addData("START Servo pos: ", "LEFT=%.2f, RIGHT=%.2f", left_servo.getPosition(), right_servo.getPosition());
     }
     @Override
     public void loop() {
@@ -91,11 +89,18 @@ public class BaseRobot extends OpMode {
             telemetry.addData("Back  power: ", "Left=%.2f, Right=%.2f", leftBack.getPower(), rightBack.getPower());
             telemetry.addData("Front curr pos:", "Left=%d, Right=%d", get_leftFront_motor_enc(), get_rightFront_motor_enc());
             telemetry.addData("Back  curr pos:", "Left=%d, Right=%d", get_leftBack_motor_enc(), get_rightBack_motor_enc());
-            telemetry.addData("LIFT1 motor current pos: ", "%d Color = %s", get_lift1_motor_enc(), detected_color);
-            //telemetry.addData("LIFT2 motor current pos: ", "%d", get_lift2_motor_enc());
+            telemetry.addData("LIFT1 motor current pos: ", "%d, Color = %s", get_lift1_motor_enc(), detected_color);
             telemetry.addData("Servo pos: ", "Left=%.2f, Right=%.2f", left_servo.getPosition(), right_servo.getPosition());
             telemetry.addData("Sen: ", " %d/ %d/ %d/ %d/ %d", front_sensor.alpha(), front_sensor.red(), front_sensor.green(), front_sensor.blue(), front_sensor.argb());
-            telemetry.addData("Distance (cm)", distance_sensor.getDistance(DistanceUnit.CM));
+            telemetry.addData("Red：", front_sensor.red());
+            telemetry.addData("Green：", front_sensor.green());
+            telemetry.addData("Blue：", front_sensor.blue());
+            double detected_dist = distance_sensor.getDistance(DistanceUnit.CM);
+            if (detected_dist == distanceOutOfRange) {
+                telemetry.addData("Distance: out of range", distance_sensor.getDistance(DistanceUnit.CM));
+            } else {
+                telemetry.addData("Distance: ", "%.2fcm", distance_sensor.getDistance(DistanceUnit.CM));
+            }
         }
     }
     /* @param power:   the speed to turn at. Negative for reverse
@@ -139,7 +144,7 @@ public class BaseRobot extends OpMode {
         rightFront.setPower(-speed);
         rightBack.setPower(-speed);
 
-        if (DEBUG) telemetry.addData("AUTO_T TURNING TO ENC: ", TARGET_ENC);
+        if (DEBUG) telemetry.addData("AUTO_T - TURNING TO ENC: ", TARGET_ENC);
         if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
             leftBack.setPower(0);
@@ -159,11 +164,11 @@ public class BaseRobot extends OpMode {
         double rightFrontPower = Range.clip(0 - power, -1.0, 1.0);
         double rightBackPower = Range.clip(0 + power, -1.0, 1.0);
 
-        if (DEBUG) telemetry.addData("MEC - Target_enc: ", "%.2f", TARGET_ENC);
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
+        if (DEBUG) telemetry.addData("MEC - Target_enc: ", "%.2f", TARGET_ENC);
 
         if (Math.abs(get_rightFront_motor_enc()) >= TARGET_ENC) {
             leftFront.setPower(0);
@@ -175,10 +180,7 @@ public class BaseRobot extends OpMode {
             return false;
         }
     }
-    // lateralpwr: pos for right, neg for left
-    // When strafing, rightPwr and leftPwr is assumed to be zero
-    // With the change, there is no diagonal movement
-    public void tankanum_drive(double rightPwr, double leftPwr, double lateralpwr) {
+    public void tankanum_original(double rightPwr, double leftPwr, double lateralpwr) {
         rightPwr *= -1;
 
         double leftFrontPower = Range.clip(leftPwr - lateralpwr, -1.0, 1.0);
@@ -191,16 +193,46 @@ public class BaseRobot extends OpMode {
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
     }
+    // lateralpwr: pos for right, neg for left
+    // When strafing, rightPwr and leftPwr is assumed to be zero
+    // With the change, there is no diagonal movement
+    public void tankanum_drive(double rightPwr, double leftPwr, double lateralpwr) {
+        rightPwr *= -1;                                 // rightPwr is in reverse
+        double leftFrontPower, leftBackPower, rightFrontPower, rightBackPower;
+        // When lateralpwr is very small, the robot moves purely forward or backward
+        if (lateralpwr > -0.05 && lateralpwr < 0.05) {  // Purely forward or backward
+            leftFrontPower  = leftPwr;
+            leftBackPower   = leftPwr;
+            rightFrontPower = rightPwr;                 // left = right's opposite
+            rightBackPower  = rightPwr;
+        } else {                                        // Strafe
+            leftFrontPower  = -lateralpwr;              // leftFront = rightBack's opposite
+            leftBackPower   = lateralpwr;               // leftBack  = rightFront's opposite
+            rightFrontPower = -lateralpwr;
+            rightBackPower  = lateralpwr;
+        }
+// to adjust the power among the motors so that they have almost equal ACTUAL PHYSICAL powers
+leftFrontPower = Range.clip(leftFrontPower * ConstantVariables.K_LF_ADJUST, -1.0, 1.0);
+leftBackPower = Range.clip(leftBackPower * ConstantVariables.K_LB_ADJUST, -1.0, 1.0);
+rightFrontPower = Range.clip(rightFrontPower * ConstantVariables.K_RF_ADJUST, -1.0, 1.0);
+rightBackPower = Range.clip(rightBackPower * ConstantVariables.K_RB_ADJUST, -1.0, 1.0);
+
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
+        if (DEBUG) telemetry.addData("TANM- Lateral: ", lateralpwr);
+    }
     public void tank_drive(double leftPwr, double rightPwr) {
-        rightPwr *= -1;    // rightPwr is in reverse
+        rightPwr *= -1;                     // rightPwr is in reverse
         double leftPower = Range.clip(leftPwr, -1.0, 1.0);
         double rightPower = Range.clip(rightPwr, -1.0, 1.0);
 
-        if (DEBUG) telemetry.addData("TAN- Power: ", "Left=%.2f, Right=%.2f", leftPower, rightPower);
         leftFront.setPower(leftPower);
         leftBack.setPower(leftPower);
-        rightFront.setPower(rightPower);   // right is opposite to left
-        rightBack.setPower(rightPower);    // right is opposite to left
+        rightFront.setPower(rightPower);    // right is opposite to left
+        rightBack.setPower(rightPower);     // right is opposite to left
+        if (DEBUG) telemetry.addData("TAND- Power: ", "Left=%.2f, Right=%.2f", leftPower, rightPower);
     }
     // SERVOS functions: open, close and reset
     public boolean open_servos() {
@@ -254,35 +286,14 @@ public class BaseRobot extends OpMode {
         lift1.setTargetPosition(target_pos);
         lift1.setPower(ConstantVariables.K_LIFT_MAX_PWR);
         return(lift1.getTargetPosition() == target_pos);
-
-   }
-
-
-/*    public boolean set_lift2_target_pos(int target_pos) {
-        if (get_lift2_motor_enc() == target_pos) return true;
-
-        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        lift2.setTargetPosition(target_pos);
-        lift2.setPower(ConstantVariables.K_LIFT2_MAX_PWR);
-        return(lift2.getTargetPosition() == target_pos);
-        }
-
- */
+    }
     // get lift encoder
     public int get_lift1_motor_enc() {      // RUN_TO_POSITION is more accurate
-        if (lift1.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
-            lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
+//        if (lift1.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
+//            lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        }
         return lift1.getCurrentPosition();
     }
-/*    public int get_lift2_motor_enc() {      // RUN_TO_POSITION is more accurate
-        if (lift2.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
-            lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-        return lift2.getCurrentPosition();
-    }
-
- */
     private boolean set_left_servo(double target_pos) {
         double position = Range.clip(target_pos, 0, 1.0);
         left_servo.setPosition(position);
@@ -300,10 +311,15 @@ public class BaseRobot extends OpMode {
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         // The motor is to do its best to run at targeted velocity.
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+// The motor is simply to run at whatever velocity is achieved by apply a particular power level to the motor.
+leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
     public void reset_lift1_encoder() {
         // The motor is to set the current encoder position to zero.
@@ -311,44 +327,34 @@ public class BaseRobot extends OpMode {
         // The motor is to attempt to rotate in whatever direction is necessary to cause
         // the encoder reading to advance or retreat from its current setting to the setting
         // which has been provided through the setTargetPosition() method.
-        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
-/*    public void reset_lift2_encoder() {
-        // The motor is to set the current encoder position to zero.
-        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        // The motor is to attempt to rotate in whatever direction is necessary to cause
-        // the encoder reading to advance or retreat from its current setting to the setting
-        // which has been provided through the setTargetPosition() method.
-        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-
- */
-    //get leftBack encoders
+    //get leftBack encoder
     public int get_leftBack_motor_enc() {
-        if (leftBack.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+//        if (leftBack.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
+//            leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        }
         return leftBack.getCurrentPosition();
     }
-    //get leftFront encoders
+    //get leftFront encoder
     public int get_leftFront_motor_enc() {
-        if (leftFront.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+//        if (leftFront.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
+//            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        }
         return leftFront.getCurrentPosition();
     }
-    //get rightBack encoders
+    //get rightBack encoder
     public int get_rightBack_motor_enc() {
-        if (rightBack.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+//        if (rightBack.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
+//            rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        }
         return rightBack.getCurrentPosition();
     }
-    //get rightFront encoders
+    //get rightFront encoder
     public int get_rightFront_motor_enc() {
-        if (rightFront.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+//       if (rightFront.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
+//            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        }
         return rightFront.getCurrentPosition();
     }
 }
